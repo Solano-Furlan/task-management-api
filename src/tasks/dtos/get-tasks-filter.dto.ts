@@ -4,9 +4,9 @@ import { TaskStatus } from '../entities/task.entity';
 export class GetTasksFilterDto {
   @IsEnum(TaskStatus)
   @IsOptional()
-  status?: TaskStatus;
+  readonly status?: TaskStatus;
 
   @IsOptional()
   @IsString()
-  search?: string;
+  readonly search?: string;
 }
