@@ -3,33 +3,34 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from './entities/user.enitity';
 import * as bcrypt from 'bcrypt';
 import { SignUpCredentialsDto } from './dtos/sign-up-credentials.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 enum UsersErrorsCode {
   DuplicatedUser = '23505',
 }
 
 @Injectable()
-export class UsersRepository extends Repository<User> {
-  constructor(private readonly dataSource: DataSource) {
-    super(User, dataSource.createEntityManager());
-  }
-
+export class UsersRepository {
+  constructor(
+    @InjectRepository(User)
+    private readonly userEntityRepository: Repository<User>,
+  ) {}
   async createUser(signUpCredentialsDto: SignUpCredentialsDto): Promise<void> {
     const { email, password }: SignUpCredentialsDto = signUpCredentialsDto;
 
     const salt: string = await bcrypt.genSalt();
     const hashedPassword: string = await bcrypt.hash(password, salt);
 
-    const user: User = this.create({
+    const user: User = this.userEntityRepository.create({
       email: email,
       password: hashedPassword,
     });
     try {
-      await this.save(user);
+      await this.userEntityRepository.save(user);
     } catch (error) {
       if (error.code === UsersErrorsCode.DuplicatedUser) {
         throw new ConflictException(
@@ -42,7 +43,7 @@ export class UsersRepository extends Repository<User> {
   }
 
   getUserByEmail(email: string): Promise<User> {
-    return this.findOneBy({ email: email });
+    return this.userEntityRepository.findOneBy({ email: email });
   }
 
   async signIn(user: User, password: string): Promise<boolean> {

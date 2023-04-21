@@ -4,21 +4,22 @@ import { CreateTaskDto } from './dtos/create-task.dto';
 import { UpdateTaskStatusDto } from './dtos/update-task-status.dto';
 import { GetTasksFilterDto } from './dtos/get-tasks-filter.dto';
 import { TasksRepository } from './tasks.repository';
+import { User } from 'src/auth/entities/user.enitity';
 
 @Injectable()
 export class TasksService {
   constructor(private readonly tasksRepository: TasksRepository) {}
 
-  getTasks(getTasksFilterDto: GetTasksFilterDto): Promise<Task[]> {
-    return this.tasksRepository.getTasks(getTasksFilterDto);
+  getTasks(getTasksFilterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
+    return this.tasksRepository.getTasks(getTasksFilterDto, user);
   }
 
-  createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksRepository.createTask(createTaskDto);
+  createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return this.tasksRepository.createTask(createTaskDto, user);
   }
 
-  async getTaskById(id: string): Promise<Task> {
-    const task = await this.tasksRepository.getTaskById(id);
+  async getTaskById(id: string, user: User): Promise<Task> {
+    const task = await this.tasksRepository.getTaskById(id, user);
     if (!task) {
       throw new NotFoundException(`Task with ID: ${id} not found`);
     }
@@ -28,17 +29,13 @@ export class TasksService {
   async updateClassStatus(
     id: string,
     updateTaskStatusDto: UpdateTaskStatusDto,
+    user: User,
   ): Promise<Task> {
-    const task: Task = await this.getTaskById(id);
+    const task: Task = await this.getTaskById(id, user);
     return this.tasksRepository.updateClassStatus(task, updateTaskStatusDto);
   }
 
-  async deleteTask(id: string): Promise<void> {
-    const deleteResult = await this.tasksRepository.deleteTask(id);
-    if (deleteResult.affected === 0) {
-      throw new NotFoundException(
-        `Failed to delete. Task with ID: ${id} not found`,
-      );
-    }
+  deleteTask(id: string, user: User): Promise<void> {
+    return this.tasksRepository.deleteTask(id, user);
   }
 }

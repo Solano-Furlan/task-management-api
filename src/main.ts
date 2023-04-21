@@ -1,14 +1,14 @@
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { GlobalAuthGuard } from './auth/guards/global-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exeption.filter';
+import { InstanceToPlainInterceptor } from './common/interceptors/instance-to-plain.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 import { WrapResponseInterceptor } from './common/interceptors/wrap-response.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app: INestApplication = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -23,18 +23,17 @@ async function bootstrap() {
   app.useGlobalInterceptors(
     new WrapResponseInterceptor(),
     new TimeoutInterceptor(),
+    new InstanceToPlainInterceptor(),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const options = new DocumentBuilder()
+  const options: Omit<OpenAPIObject, 'paths'> = new DocumentBuilder()
     .setTitle('Task Management')
     .setDescription('Task Management API Description')
     .setVersion('1.0')
     .addBasicAuth()
     .build();
-
-  const document = SwaggerModule.createDocument(app, options);
-
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(3000);
