@@ -12,8 +12,8 @@ import { Task, TaskStatus } from './entities/task.entity';
 
 @Injectable()
 export class TasksRepository extends Repository<Task> {
-  constructor(private _dataSource: DataSource) {
-    super(Task, _dataSource.createEntityManager());
+  constructor(private readonly dataSource: DataSource) {
+    super(Task, dataSource.createEntityManager());
   }
 
   async getTasks(getTasksFilterDto: GetTasksFilterDto): Promise<Task[]> {
